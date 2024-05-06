@@ -1,0 +1,32 @@
+import unittest
+from unittest.mock import patch
+from your_script_file_name import app, toggle_variable
+
+class TestApp(unittest.TestCase):
+
+    @patch('your_script_file_name.relay.toggle')
+    @patch('your_script_file_name.relay_2.toggle')
+    def test_toggle(self, mock_toggle_2, mock_toggle):
+        # Initial state of toggle_variable
+        initial_state = toggle_variable
+
+        # Sending a POST request to the '/' endpoint
+        with app.test_client() as client:
+            response = client.post('/')
+            data = response.get_data(as_text=True)
+
+            # Check if the toggle_variable has been toggled
+            self.assertNotEqual(initial_state, toggle_variable)
+
+            # Check if the correct message is returned
+            self.assertIn('Toggle variable is now', data)
+
+            # Check if relay.toggle() and relay_2.toggle() were called
+            mock_toggle.assert_called_once()
+            mock_toggle_2.assert_called_once()
+
+            # Reset toggle_variable to its initial state for next test
+            toggle_variable = initial_state
+
+if __name__ == '__main__':
+    unittest.main()
