@@ -1,36 +1,47 @@
-import time
-from gpiozero import Button,OutputDevice
-from flask import Flask, request
+import time  # Importing the time module for time-related functions
+from gpiozero import Button, OutputDevice  # Importing Button and OutputDevice classes from gpiozero module
+from flask import Flask, request  # Importing Flask framework and request module
 
-relay = OutputDevice(15,initial_value=True)
+# Creating instances of OutputDevice for controlling relays connected to GPIO pins 15 and 18
+relay = OutputDevice(15, initial_value=True)
+relay_2 = OutputDevice(18, initial_value=True)
 
-relay_2 = OutputDevice(18,initial_value=True)
-
+# Creating an instance of Button for monitoring a button connected to GPIO pin 2
 button = Button(2)
 
+# Creating a Flask web application instance
 app = Flask(__name__)
+
+# Variable for toggling the state of the relays
 toggle_variable = False
 
+# Endpoint for toggling the relays' states
 @app.route('/', methods=['POST'])
 def toggle():
-    global toggle_variable
+    global toggle_variable  # Accessing the global toggle_variable within the function
+
+    # Toggling the state of toggle_variable
     toggle_variable = not toggle_variable
 
-    if (toggle_variable == True):
+    # If the toggle_variable is True, turn off relay and print message
+    if toggle_variable:
         relay.toggle()
         print("flight controller off")
         time.sleep(0.1)
         relay_2.toggle()
 
-    elif (toggle_variable == False):
+    # If the toggle_variable is False, turn on relay and print message
+    elif not toggle_variable:
         relay_2.toggle()
         print("flight controller on")
         time.sleep(0.1)
         relay.toggle()
 
+    # Returning a response with the updated toggle_variable state
     return f'Toggle variable is now {toggle_variable}', 200
 
+# Main block of the script
 if __name__ == '__main__':
-    from waitress import serve
-    serve(app, host='0.0.0.0', port=5000)
+    from waitress import serve  # Importing the serve function from waitress module for serving the Flask app
+    serve(app, host='0.0.0.0', port=5000)  # Serving the Flask app on host 0.0.0.0 and port 5000
 
