@@ -1,0 +1,41 @@
+import cv2
+import numpy as np
+import unittest
+from picamera2 import Picamera2
+
+class TestTemplateMatching(unittest.TestCase):
+
+    def test_template_loading(self):
+        template = cv2.imread('/home/bri/template.jpg', 0)
+        self.assertIsNotNone(template)
+
+    def test_frame_capturing(self):
+        with Picamera2() as video:
+            frame = video.capture_array()
+            self.assertIsNotNone(frame)
+
+    def test_template_matching(self):
+        template = cv2.imread('/home/bri/template.jpg', 0)
+        with Picamera2() as video:
+            height = 640
+            width = 480
+            video.configure(video.create_video_configuration(main={"format": 'RGB888', "size": (width, height)}))
+            video.start()
+            while True:
+                frame = video.capture_array()
+                if frame is None:
+                    break
+                gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                res = cv2.matchTemplate(gray_frame, template, cv2.TM_CCOEFF_NORMED)
+                loc = np.where(res >= 0.1)
+                if len(loc[0]) > 0:
+                    avg_x = int(np.mean(loc[1]))
+                    avg_y = int(np.mean(loc[0]))
+                    self.assertTrue(avg_x >= 0)
+                    self.assertTrue(avg_y >= 0)
+                break
+
+    # Add more tests as needed
+
+if __name__ == '__main__':
+    unittest.main()
