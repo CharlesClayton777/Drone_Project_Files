@@ -1,0 +1,36 @@
+import time
+from gpiozero import Button,OutputDevice
+from flask import Flask, request
+
+relay = OutputDevice(15,initial_value=True)
+
+relay_2 = OutputDevice(18,initial_value=True)
+
+button = Button(2)
+
+app = Flask(__name__)
+toggle_variable = False
+
+@app.route('/', methods=['POST'])
+def toggle():
+    global toggle_variable
+    toggle_variable = not toggle_variable
+
+    if (toggle_variable == True):
+        relay.toggle()
+        print("flight controller off")
+        time.sleep(0.1)
+        relay_2.toggle()
+
+    elif (toggle_variable == False):
+        relay_2.toggle()
+        print("flight controller on")
+        time.sleep(0.1)
+        relay.toggle()
+
+    return f'Toggle variable is now {toggle_variable}', 200
+
+if __name__ == '__main__':
+    from waitress import serve
+    serve(app, host='0.0.0.0', port=5000)
+
